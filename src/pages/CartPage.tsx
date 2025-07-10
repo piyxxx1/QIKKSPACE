@@ -1,10 +1,20 @@
+import React from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
+import { usePayment } from '@/hooks/usePayment';
+import { config } from '@/config/env';
+import { testEnvironmentVariables } from '@/utils/envTest';
 
 const CartPage = () => {
   const { cartItems, removeFromCart, clearCart, getTotalPrice } = useCart();
+  const { processPayment, isProcessing, paymentError, clearError } = usePayment();
+
+  // Test environment variables on component mount
+  React.useEffect(() => {
+    testEnvironmentVariables();
+  }, []);
 
   if (cartItems.length === 0) {
     return (
@@ -109,36 +119,39 @@ const CartPage = () => {
                     </div>
                   )}
 
+                  {/* Payment Error Display */}
+                  {paymentError && (
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-600 p-3 rounded-lg text-sm mb-4">
+                      <div className="flex items-center justify-between">
+                        <span>Payment Error: {paymentError}</span>
+                        <button
+                          onClick={clearError}
+                          className="text-red-400 hover:text-red-600"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Action Buttons */}
                   <div className="space-y-3 pt-4">
                     <Button 
                       className="w-full btn-electric"
                       onClick={() => {
                         const amount = getTotalPrice() - (cartItems.length > 1 ? 41599 : 0);
-                        const options = {
-                          key: 'rzp_test_1234567890', // Replace with your Razorpay key
-                          amount: amount * 100, // Amount in paise
-                          currency: 'INR',
-                          name: 'QIKK SPACE',
-                          description: 'Service Payment',
-                          handler: function(response: any) {
-                            alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
-                          },
+                        processPayment(amount, {
+                          description: `Payment for ${cartItems.length} service(s)`,
                           prefill: {
                             name: '',
-                            email: 'piyushjha9001@gmail.com',
-                            contact: '+918588091122'
+                            email: config.contact.email,
+                            contact: config.contact.phone,
                           },
-                          theme: {
-                            color: '#3B82F6'
-                          }
-                        };
-                        // @ts-ignore
-                        const rzp = new window.Razorpay(options);
-                        rzp.open();
+                        });
                       }}
+                      disabled={isProcessing}
                     >
-                      Pay with Razorpay
+                      {isProcessing ? 'Processing Payment...' : 'Pay with Razorpay'}
                     </Button>
                     <Button className="w-full btn-outline-glow">
                       Request Custom Quote
