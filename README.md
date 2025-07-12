@@ -99,5 +99,4 @@ Feel free to fork this repository, open issues, and submit pull requests. We app
 ## 📫 Contact
 
 For business inquiries or feedback, please reach out to us at:  
-📧 **hello@qikkspace.com**  
-🌐 [www.qikkspace.com](https://www.qikkspace.com)
+🌐 [www.qikkspace.com](https://www.qikkspace.living)
