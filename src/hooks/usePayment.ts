@@ -6,7 +6,7 @@ export const usePayment = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  const processPayment = async (amount: number, options?: Partial<PaymentOptions>) => {
+  const processPayment = async (amount: number, options?: Partial<PaymentOptions>, onSuccess?: (payment: any) => void) => {
     setIsProcessing(true);
     setPaymentError(null);
 
@@ -14,7 +14,7 @@ export const usePayment = () => {
       await PaymentService.initializePayment({
         amount,
         ...options,
-      });
+      }, onSuccess);
     } catch (error) {
       console.error('Payment processing failed:', error);
       setPaymentError(error instanceof Error ? error.message : 'Payment failed');

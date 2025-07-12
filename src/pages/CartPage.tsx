@@ -2,16 +2,29 @@ import React, { useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { usePayment } from '@/hooks/usePayment';
 import { config } from '@/config/env';
 import { testEnvironmentVariables } from '@/utils/envTest';
 import CustomQuoteModal from '@/components/CustomQuoteModal';
+import { Input } from '@/components/ui/input';
 
 const CartPage = () => {
   const { cartItems, removeFromCart, clearCart, getTotalPrice } = useCart();
   const { processPayment, isProcessing, paymentError, clearError } = usePayment();
   const [isCustomQuoteModalOpen, setIsCustomQuoteModalOpen] = useState(false);
+  const [customerDetails, setCustomerDetails] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  });
+  const [formTouched, setFormTouched] = useState(false);
+  const navigate = useNavigate();
+
+  const isFormValid =
+    customerDetails.name.trim() !== '' &&
+    /^\S+@\S+\.\S+$/.test(customerDetails.email) &&
+    /^\+?\d{10,15}$/.test(customerDetails.phone);
 
   // Test environment variables on component mount
   React.useEffect(() => {
@@ -90,8 +103,61 @@ const CartPage = () => {
                 <CardTitle className="text-2xl font-bold">Order Summary</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  
+                <form className="space-y-6">
+                  {/* Customer Details Form */}
+                  <div className="mb-6">
+                    <h3 className="font-semibold mb-4 text-lg flex items-center gap-2">
+                      <span className="inline-block text-xl">👤</span> Customer Details
+                    </h3>
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium mb-2" htmlFor="cartCustomerName">Full Name *</label>
+                        <Input
+                          id="cartCustomerName"
+                          type="text"
+                          className="w-full bg-background border-border focus:border-primary transition-colors"
+                          placeholder="John Doe"
+                          value={customerDetails.name}
+                          onChange={e => setCustomerDetails({ ...customerDetails, name: e.target.value })}
+                          onBlur={() => setFormTouched(true)}
+                          autoComplete="name"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2" htmlFor="cartCustomerEmail">Email Address *</label>
+                        <Input
+                          id="cartCustomerEmail"
+                          type="email"
+                          className="w-full bg-background border-border focus:border-primary transition-colors"
+                          placeholder="john@example.com"
+                          value={customerDetails.email}
+                          onChange={e => setCustomerDetails({ ...customerDetails, email: e.target.value })}
+                          onBlur={() => setFormTouched(true)}
+                          autoComplete="email"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2" htmlFor="cartCustomerPhone">Mobile Number *</label>
+                        <Input
+                          id="cartCustomerPhone"
+                          type="tel"
+                          className="w-full bg-background border-border focus:border-primary transition-colors"
+                          placeholder="e.g. +919999999999"
+                          value={customerDetails.phone}
+                          onChange={e => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
+                          onBlur={() => setFormTouched(true)}
+                          autoComplete="tel"
+                          required
+                        />
+                      </div>
+                      {formTouched && !isFormValid && (
+                        <div className="text-red-500 text-xs mt-2">Please enter valid name, email, and phone number.</div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Items Count */}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Items ({cartItems.length})</span>
@@ -139,19 +205,24 @@ const CartPage = () => {
                   {/* Action Buttons */}
                   <div className="space-y-3 pt-4">
                     <Button 
+                      type="button"
                       className="w-full btn-electric"
                       onClick={() => {
+                        setFormTouched(true);
+                        if (!isFormValid) return;
                         const amount = getTotalPrice() - (cartItems.length > 1 ? 500 : 0);
                         processPayment(amount, {
                           description: `Payment for ${cartItems.length} service(s)`,
                           prefill: {
-                            name: '',
-                            email: config.contact.email,
-                            contact: config.contact.phone,
+                            name: customerDetails.name,
+                            email: customerDetails.email,
+                            contact: customerDetails.phone,
                           },
+                        }, (payment) => {
+                          navigate('/thank-you', { state: { payment } });
                         });
                       }}
-                      disabled={isProcessing}
+                      disabled={isProcessing || !isFormValid}
                     >
                       {isProcessing ? 'Processing Payment...' : 'Pay with Razorpay'}
                     </Button>
@@ -174,7 +245,7 @@ const CartPage = () => {
                       Clear Cart
                     </Button>
                   </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
           </div>
@@ -219,6 +290,7 @@ const CartPage = () => {
         onClose={() => setIsCustomQuoteModalOpen(false)}
         cartItems={cartItems}
         getTotalPrice={getTotalPrice}
+        onPaymentSuccess={(payment) => navigate('/thank-you', { state: { payment } })}
       />
     </div>
   );

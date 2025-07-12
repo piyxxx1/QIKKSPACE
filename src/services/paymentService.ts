@@ -49,7 +49,7 @@ export class PaymentService {
     });
   }
 
-  static async initializePayment(options: PaymentOptions): Promise<void> {
+  static async initializePayment(options: PaymentOptions, onSuccess?: (payment: any) => void): Promise<void> {
     try {
       // Load Razorpay script if not already loaded
       await this.loadRazorpayScript();
@@ -64,10 +64,15 @@ export class PaymentService {
           if (config.isDevelopment) {
             console.log('Payment successful:', response);
           }
-          // You can add additional logic here like sending to your backend
-          // For production, consider using a toast notification instead of alert
-          if (config.isDevelopment) {
-            alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
+          // Call the onSuccess callback if provided
+          if (onSuccess) {
+            onSuccess({
+              ...response,
+              amount: paymentOptions.amount,
+              email: options.prefill?.email,
+              contact: options.prefill?.contact,
+              date: new Date().toISOString(),
+            });
           }
         },
         prefill: {
@@ -88,12 +93,11 @@ export class PaymentService {
         notes: {
           address: 'QIKK SPACE Corporate Office'
         },
-        remember_customer: true,
       };
 
+      // @ts-ignore
       const rzp = new window.Razorpay(paymentOptions);
       rzp.open();
-
     } catch (error) {
       console.error('Payment initialization failed:', error);
       if (config.isDevelopment) {

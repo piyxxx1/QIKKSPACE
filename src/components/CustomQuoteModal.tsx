@@ -20,6 +20,7 @@ interface CustomQuoteModalProps {
   onClose: () => void;
   cartItems: CartItem[];
   getTotalPrice: () => number;
+  onPaymentSuccess?: (payment: any) => void;
 }
 
 const CustomQuoteModal: React.FC<CustomQuoteModalProps> = ({
@@ -27,35 +28,47 @@ const CustomQuoteModal: React.FC<CustomQuoteModalProps> = ({
   onClose,
   cartItems,
   getTotalPrice,
+  onPaymentSuccess,
 }) => {
   const [customAmount, setCustomAmount] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState('');
   const { processPayment, isProcessing, paymentError, clearError } = usePayment();
+  const [customerDetails, setCustomerDetails] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  });
+  const [formTouched, setFormTouched] = useState(false);
 
   const suggestedAmount = getTotalPrice() - (cartItems.length > 1 ? 500 : 0);
 
+  const isFormValid =
+    customerDetails.name.trim() !== '' &&
+    /^\S+@\S+\.\S+$/.test(customerDetails.email) &&
+    /^\+?\d{10,15}$/.test(customerDetails.phone);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setFormTouched(true);
+    if (!isFormValid) return;
     if (!customAmount || parseFloat(customAmount) <= 0) {
-      // Use a more user-friendly error handling approach
       setValidationError('Please enter a valid amount');
       return;
     }
-
     setIsSubmitting(true);
-    
     try {
       const amount = parseFloat(customAmount);
       await processPayment(amount, {
         description: `Custom Quote: ${description || 'Custom service request'}`,
         prefill: {
-          name: '',
-          email: config.contact.email,
-          contact: config.contact.phone,
+          name: customerDetails.name,
+          email: customerDetails.email,
+          contact: customerDetails.phone,
         },
+      }, (payment) => {
+        if (onPaymentSuccess) onPaymentSuccess(payment);
       });
       onClose();
     } catch (error) {
@@ -77,7 +90,7 @@ const CustomQuoteModal: React.FC<CustomQuoteModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md service-card">
+      <Card className="w-full max-w-md service-card max-h-[90vh] overflow-y-auto p-2 sm:p-0">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
             Request Custom Quote
@@ -85,6 +98,60 @@ const CustomQuoteModal: React.FC<CustomQuoteModalProps> = ({
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Customer Details Form */}
+            <div className="mb-6">
+              <h3 className="font-semibold mb-4 text-lg flex items-center gap-2">
+                <span className="inline-block text-xl">👤</span> Customer Details
+              </h3>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2" htmlFor="quoteCustomerName">Full Name *</label>
+                  <Input
+                    id="quoteCustomerName"
+                    type="text"
+                    className="w-full bg-background border-border focus:border-primary transition-colors"
+                    placeholder="John Doe"
+                    value={customerDetails.name}
+                    onChange={e => setCustomerDetails({ ...customerDetails, name: e.target.value })}
+                    onBlur={() => setFormTouched(true)}
+                    autoComplete="name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2" htmlFor="quoteCustomerEmail">Email Address *</label>
+                  <Input
+                    id="quoteCustomerEmail"
+                    type="email"
+                    className="w-full bg-background border-border focus:border-primary transition-colors"
+                    placeholder="john@example.com"
+                    value={customerDetails.email}
+                    onChange={e => setCustomerDetails({ ...customerDetails, email: e.target.value })}
+                    onBlur={() => setFormTouched(true)}
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2" htmlFor="quoteCustomerPhone">Mobile Number *</label>
+                  <Input
+                    id="quoteCustomerPhone"
+                    type="tel"
+                    className="w-full bg-background border-border focus:border-primary transition-colors"
+                    placeholder="e.g. +919999999999"
+                    value={customerDetails.phone}
+                    onChange={e => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
+                    onBlur={() => setFormTouched(true)}
+                    autoComplete="tel"
+                    required
+                  />
+                </div>
+                {formTouched && !isFormValid && (
+                  <div className="text-red-500 text-xs mt-2">Please enter valid name, email, and phone number.</div>
+                )}
+              </div>
+            </div>
+
             {/* Suggested Amount */}
             <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg">
               <Label className="text-sm font-medium text-blue-700 dark:text-blue-300">
@@ -175,7 +242,7 @@ const CustomQuoteModal: React.FC<CustomQuoteModalProps> = ({
               <Button
                 type="submit"
                 className="flex-1 btn-electric"
-                disabled={isProcessing || isSubmitting || !customAmount}
+                disabled={isProcessing || isSubmitting || !customAmount || !isFormValid}
               >
                 {isProcessing || isSubmitting ? 'Processing...' : 'Pay with Razorpay'}
               </Button>
