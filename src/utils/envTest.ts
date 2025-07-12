@@ -1,5 +1,10 @@
 // Environment Variables Test Utility
 export const testEnvironmentVariables = () => {
+  // Only run in development
+  if (!import.meta.env.DEV) {
+    return true;
+  }
+
   console.log('🔍 Testing Environment Variables...');
   
   const envVars = {

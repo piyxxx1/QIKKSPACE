@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,10 +6,12 @@ import { Link } from 'react-router-dom';
 import { usePayment } from '@/hooks/usePayment';
 import { config } from '@/config/env';
 import { testEnvironmentVariables } from '@/utils/envTest';
+import CustomQuoteModal from '@/components/CustomQuoteModal';
 
 const CartPage = () => {
   const { cartItems, removeFromCart, clearCart, getTotalPrice } = useCart();
   const { processPayment, isProcessing, paymentError, clearError } = usePayment();
+  const [isCustomQuoteModalOpen, setIsCustomQuoteModalOpen] = useState(false);
 
   // Test environment variables on component mount
   React.useEffect(() => {
@@ -100,7 +102,7 @@ const CartPage = () => {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Multi-service Discount</span>
                     <span className="font-medium text-green-500">
-                      {cartItems.length > 1 ? '-₹41,599' : '₹0'}
+                      {cartItems.length > 1 ? '-₹500' : '₹0'}
                     </span>
                   </div>
 
@@ -108,14 +110,14 @@ const CartPage = () => {
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
                       <span className="text-primary">
-                        ₹{(getTotalPrice() - (cartItems.length > 1 ? 41599 : 0)).toLocaleString()}
+                        ₹{(getTotalPrice() - (cartItems.length > 1 ? 500 : 0)).toLocaleString()}
                       </span>
                     </div>
                   </div>
 
                   {cartItems.length > 1 && (
                     <div className="bg-green-500/10 text-green-600 p-3 rounded-lg text-sm">
-                      🎉 You saved ₹41,599 with our multi-service discount!
+                      🎉 You saved ₹500 with our multi-service discount!
                     </div>
                   )}
 
@@ -139,7 +141,7 @@ const CartPage = () => {
                     <Button 
                       className="w-full btn-electric"
                       onClick={() => {
-                        const amount = getTotalPrice() - (cartItems.length > 1 ? 41599 : 0);
+                        const amount = getTotalPrice() - (cartItems.length > 1 ? 500 : 0);
                         processPayment(amount, {
                           description: `Payment for ${cartItems.length} service(s)`,
                           prefill: {
@@ -153,7 +155,10 @@ const CartPage = () => {
                     >
                       {isProcessing ? 'Processing Payment...' : 'Pay with Razorpay'}
                     </Button>
-                    <Button className="w-full btn-outline-glow">
+                    <Button 
+                      className="w-full btn-outline-glow"
+                      onClick={() => setIsCustomQuoteModalOpen(true)}
+                    >
                       Request Custom Quote
                     </Button>
                     <Link to="/contact" className="block">
@@ -207,6 +212,14 @@ const CartPage = () => {
           </Card>
         </div>
       </div>
+
+      {/* Custom Quote Modal */}
+      <CustomQuoteModal
+        isOpen={isCustomQuoteModalOpen}
+        onClose={() => setIsCustomQuoteModalOpen(false)}
+        cartItems={cartItems}
+        getTotalPrice={getTotalPrice}
+      />
     </div>
   );
 };

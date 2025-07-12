@@ -1,5 +1,9 @@
 // Environment Configuration
 export const config = {
+  // Environment
+  isDevelopment: import.meta.env.DEV,
+  isProduction: import.meta.env.PROD,
+
   // Razorpay Configuration
   razorpay: {
     keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
@@ -26,4 +30,25 @@ export const config = {
     templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '',
     publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '',
   },
+};
+
+// Validation function for required environment variables
+export const validateEnvironment = () => {
+  const requiredVars = [
+    'VITE_RAZORPAY_KEY_ID',
+    'VITE_CONTACT_EMAIL',
+    'VITE_CONTACT_PHONE',
+  ];
+
+  const missingVars = requiredVars.filter(
+    (varName) => !import.meta.env[varName]
+  );
+
+  if (missingVars.length > 0 && import.meta.env.PROD) {
+    console.warn(
+      `Missing required environment variables: ${missingVars.join(', ')}`
+    );
+  }
+
+  return missingVars.length === 0;
 };

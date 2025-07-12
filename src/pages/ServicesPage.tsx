@@ -3,6 +3,17 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 
+interface Service {
+  id: string;
+  title: string;
+  description: string;
+  features: string[];
+  price: number;
+  category: string;
+  icon: string;
+  gradient: string;
+}
+
 const ServicesPage = () => {
   const { addToCart } = useCart();
   const { toast } = useToast();
@@ -70,7 +81,7 @@ const ServicesPage = () => {
     }
   ];
 
-  const handleAddToCart = (service: any) => {
+  const handleAddToCart = (service: Service) => {
     addToCart({
       id: service.id,
       title: service.title,

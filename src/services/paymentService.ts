@@ -3,7 +3,11 @@ import { config } from '@/config/env';
 // Razorpay types
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: {
+      new (options: Record<string, unknown>): {
+        open: () => void;
+      };
+    };
   }
 }
 
@@ -57,9 +61,14 @@ export class PaymentService {
         name: options.name || config.company.name,
         description: options.description || config.company.description,
         handler: function(response: PaymentResponse) {
-          console.log('Payment successful:', response);
+          if (config.isDevelopment) {
+            console.log('Payment successful:', response);
+          }
           // You can add additional logic here like sending to your backend
-          alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
+          // For production, consider using a toast notification instead of alert
+          if (config.isDevelopment) {
+            alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
+          }
         },
         prefill: {
           name: options.prefill?.name || '',
@@ -71,7 +80,9 @@ export class PaymentService {
         },
         modal: {
           ondismiss: function() {
-            console.log('Payment modal closed');
+            if (config.isDevelopment) {
+              console.log('Payment modal closed');
+            }
           }
         },
         notes: {
@@ -85,14 +96,18 @@ export class PaymentService {
 
     } catch (error) {
       console.error('Payment initialization failed:', error);
-      alert('Failed to initialize payment. Please try again.');
+      if (config.isDevelopment) {
+        alert('Failed to initialize payment. Please try again.');
+      }
     }
   }
 
   static async verifyPayment(paymentId: string, orderId: string, signature: string): Promise<boolean> {
     // This would typically be done on your backend
     // For now, we'll return true as a placeholder
-    console.log('Payment verification:', { paymentId, orderId, signature });
+    if (config.isDevelopment) {
+      console.log('Payment verification:', { paymentId, orderId, signature });
+    }
     return true;
   }
 
