@@ -24,6 +24,10 @@ export interface PaymentOptions {
   theme?: {
     color?: string;
   };
+  notes?: {
+    address?: string;
+    description?: string;
+  };
 }
 
 export interface PaymentResponse {
@@ -91,7 +95,8 @@ export class PaymentService {
           }
         },
         notes: {
-          address: 'QIKK SPACE Corporate Office'
+          address: options.notes?.address || 'QIKK SPACE Corporate Office',
+          description: options.notes?.description || options.description || config.company.description,
         },
       };
 

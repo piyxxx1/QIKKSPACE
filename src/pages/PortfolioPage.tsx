@@ -32,6 +32,16 @@ const PortfolioPage = () => {
       client: 'Herbal Cleaning',
       year: '2023'
     },
+    {
+      id: 4,
+      title: 'Clarity Research',
+      category: 'Website Development',
+      image: '/assets/ClarityResearch.png',
+      description: 'Quantitative Research website for a research firm.',
+      technologies: ['React', 'Cloudflare', 'Tailwind CSS'],
+      client: 'Clarity Research',
+      year: '2024'
+    },
   ];
 
   const categories = ['All', 'Website Development', 'Mobile App Development', 'AI/ML Solutions'];
@@ -138,6 +148,10 @@ const PortfolioPage = () => {
                     </a>
                   ) : project.title === 'Herbal Cleaning' ? (
                     <a href="https://www.herbalcleaning.com/" target="_blank" rel="noopener noreferrer" className="w-full mt-4 btn-outline-glow py-2 text-sm group-hover:btn-electric transition-all block text-center">
+                      View Project Details
+                    </a>
+                  ) : project.title === 'Clarity Research' ? (
+                    <a href="https://clarityresearch.vercel.app/" target="_blank" rel="noopener noreferrer" className="w-full mt-4 btn-outline-glow py-2 text-sm group-hover:btn-electric transition-all block text-center">
                       View Project Details
                     </a>
                   ) : (

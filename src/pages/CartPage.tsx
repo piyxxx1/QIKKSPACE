@@ -8,6 +8,7 @@ import { config } from '@/config/env';
 import { testEnvironmentVariables } from '@/utils/envTest';
 import CustomQuoteModal from '@/components/CustomQuoteModal';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 const CartPage = () => {
   const { cartItems, removeFromCart, clearCart, getTotalPrice } = useCart();
@@ -17,6 +18,7 @@ const CartPage = () => {
     name: '',
     email: '',
     phone: '',
+    address: '',
   });
   const [formTouched, setFormTouched] = useState(false);
   const navigate = useNavigate();
@@ -24,7 +26,8 @@ const CartPage = () => {
   const isFormValid =
     customerDetails.name.trim() !== '' &&
     /^\S+@\S+\.\S+$/.test(customerDetails.email) &&
-    /^\+?\d{10,15}$/.test(customerDetails.phone);
+    /^\+?\d{10,15}$/.test(customerDetails.phone) &&
+    customerDetails.address.trim() !== '';
 
   // Test environment variables on component mount
   React.useEffect(() => {
@@ -152,8 +155,24 @@ const CartPage = () => {
                           required
                         />
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2" htmlFor="cartCustomerAddress">Delivery Address *</label>
+                        <Textarea
+                          id="cartCustomerAddress"
+                          className="w-full bg-background border-border focus:border-primary transition-colors"
+                          placeholder="Enter your complete delivery address"
+                          value={customerDetails.address}
+                          onChange={e => setCustomerDetails({ ...customerDetails, address: e.target.value })}
+                          onBlur={() => setFormTouched(true)}
+                          rows={3}
+                          required
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          This address will be used for service delivery and payment verification
+                        </p>
+                      </div>
                       {formTouched && !isFormValid && (
-                        <div className="text-red-500 text-xs mt-2">Please enter valid name, email, and phone number.</div>
+                        <div className="text-red-500 text-xs mt-2">Please enter valid name, email, phone number, and address.</div>
                       )}
                     </div>
                   </div>
@@ -217,6 +236,10 @@ const CartPage = () => {
                             name: customerDetails.name,
                             email: customerDetails.email,
                             contact: customerDetails.phone,
+                          },
+                          notes: {
+                            address: customerDetails.address,
+                            description: `Payment for ${cartItems.length} service(s)`,
                           },
                         }, (payment) => {
                           navigate('/thank-you', { state: { payment } });

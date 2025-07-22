@@ -39,6 +39,7 @@ const CustomQuoteModal: React.FC<CustomQuoteModalProps> = ({
     name: '',
     email: '',
     phone: '',
+    address: '',
   });
   const [formTouched, setFormTouched] = useState(false);
 
@@ -47,7 +48,8 @@ const CustomQuoteModal: React.FC<CustomQuoteModalProps> = ({
   const isFormValid =
     customerDetails.name.trim() !== '' &&
     /^\S+@\S+\.\S+$/.test(customerDetails.email) &&
-    /^\+?\d{10,15}$/.test(customerDetails.phone);
+    /^\+?\d{10,15}$/.test(customerDetails.phone) &&
+    customerDetails.address.trim() !== '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +68,10 @@ const CustomQuoteModal: React.FC<CustomQuoteModalProps> = ({
           name: customerDetails.name,
           email: customerDetails.email,
           contact: customerDetails.phone,
+        },
+        notes: {
+          address: customerDetails.address,
+          description: description || 'Custom service request',
         },
       }, (payment) => {
         if (onPaymentSuccess) onPaymentSuccess(payment);
@@ -146,8 +152,24 @@ const CustomQuoteModal: React.FC<CustomQuoteModalProps> = ({
                     required
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2" htmlFor="quoteCustomerAddress">Delivery Address *</label>
+                  <Textarea
+                    id="quoteCustomerAddress"
+                    className="w-full bg-background border-border focus:border-primary transition-colors"
+                    placeholder="Enter your complete delivery address"
+                    value={customerDetails.address}
+                    onChange={e => setCustomerDetails({ ...customerDetails, address: e.target.value })}
+                    onBlur={() => setFormTouched(true)}
+                    rows={3}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This address will be used for service delivery and payment verification
+                  </p>
+                </div>
                 {formTouched && !isFormValid && (
-                  <div className="text-red-500 text-xs mt-2">Please enter valid name, email, and phone number.</div>
+                  <div className="text-red-500 text-xs mt-2">Please enter valid name, email, phone number, and address.</div>
                 )}
               </div>
             </div>
